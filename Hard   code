@@ -1,0 +1,95 @@
+Sub HardcodeSecondReference()
+    Dim cell As Range
+    Dim formulaStr As String
+    Dim minusPos As Integer
+    Dim firstPart As String
+    Dim secondPart As String
+    Dim secondValue As Variant
+    
+    ' Loop through the cells you have highlighted
+    For Each cell In Selection
+    
+        ' Only process cells that contain a formula
+        If cell.HasFormula Then
+            formulaStr = cell.Formula
+            
+            ' Check if the cell contains a minus sign
+            If InStr(formulaStr, "-") > 0 Then
+                minusPos = InStr(formulaStr, "-")
+                
+                ' Extract the first part (e.g., "=E100")
+                firstPart = Left(formulaStr, minusPos - 1)
+                
+                ' Extract the part after the minus sign (e.g., "K32" or "500")
+                secondPart = Mid(formulaStr, minusPos + 1)
+                
+                On Error Resume Next
+                Err.Clear
+                
+                '------------------------------------------------------------
+                ' CASE 1: secondPart is already a hardcoded number
+                '         e.g. =E100-500
+                '         => keep as-is if > 0, strip minus if = 0
+                '------------------------------------------------------------
+                If IsNumeric(secondPart) Then
+                    secondValue = CDbl(secondPart)
+                    
+                    If secondValue > 0 Then
+                        ' Keep the formula exactly as it is
+                        ' =E100-500 => =E100-500
+                        cell.Formula = firstPart & "-" & secondValue
+                    Else
+                        ' =E100-0 => =E100
+                        cell.Formula = firstPart
+                    End If
+                    
+                '------------------------------------------------------------
+                ' CASE 2: secondPart is a cell reference
+                '         e.g. =E100-K32
+                '         => resolve the reference value
+                '------------------------------------------------------------
+                Else
+                    Err.Clear
+                    secondValue = Range(secondPart).Value
+                    
+                    If Err.Number <> 0 Then
+                        '----------------------------------------------------
+                        ' Reference is invalid/broken
+                        ' => strip the minus part
+                        ' =E100-BADREF => =E100
+                        '----------------------------------------------------
+                        cell.Formula = firstPart
+                        
+                    ElseIf Not IsNumeric(secondValue) Or secondValue = "" Then
+                        '----------------------------------------------------
+                        ' Reference exists but holds text or is empty
+                        ' => strip the minus part
+                        ' =E100-K32 (K32="text") => =E100
+                        '----------------------------------------------------
+                        cell.Formula = firstPart
+                        
+                    ElseIf CDbl(secondValue) > 0 Then
+                        '----------------------------------------------------
+                        ' Reference holds a value > 0
+                        ' => hardcode that value
+                        ' =E100-K32 (K32=50) => =E100-50
+                        '----------------------------------------------------
+                        cell.Formula = firstPart & "-" & CDbl(secondValue)
+                        
+                    Else
+                        '----------------------------------------------------
+                        ' Reference holds 0 or negative
+                        ' => strip the minus part
+                        ' =E100-K32 (K32=0) => =E100
+                        '----------------------------------------------------
+                        cell.Formula = firstPart
+                    End If
+                End If
+                
+                On Error GoTo 0
+                
+            End If ' has minus sign
+        End If ' has formula
+        
+    Next cell
+End Sub
