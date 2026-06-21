@@ -1,0 +1,70 @@
+Sub Update_Rest_Format()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim Qte_Manif As Double
+    Dim Qte_Rest As Double
+    
+    ' Set to active sheet
+    Set ws = ActiveSheet
+    
+    ' Validation: Check sheet name
+    If Not ws.Name Like "RST*" Then
+        MsgBox "Script cancelled: Active sheet is not a REST date sheet.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Find the last row based on column E
+    lastRow = ws.Cells(ws.Rows.Count, "E").End(xlUp).Row
+    
+    ' Loop through data starting from row 10
+    For i = 10 To lastRow
+        
+        ' Basic Numeric Check
+        If VarType(ws.Cells(i, "N").Value) = vbDouble And VarType(ws.Cells(i, "N").Value) = vbDouble Then
+            
+            Qte_Manif = CDbl(ws.Cells(i, "E").Value)
+            Qte_Rest = CDbl(ws.Cells(i, "N").Value)
+            
+            ' --- MASTER FILTER ---
+            ' Only process if Manif is greater than 0.
+            ' If it is 0 or less, the script skips to the next row.
+            With ws.Cells(i, "X")
+                If Qte_Manif > 0 Then
+                    ' Logic 1: SOLDEE
+                    If Qte_Rest = 0 Then
+                        .Value = "SOLDEE"
+                        ws.Range(ws.Cells(i, "A"), ws.Cells(i, "X")).Interior.Color = vbYellow
+                        ws.Range(ws.Cells(i, "A"), ws.Cells(i, "X")).Font.Color = vbRed
+                        
+                    ' Logic 2: OPER
+                    ElseIf Qte_Rest < Qte_Manif Then
+                        .Value = "OPER"
+                        .Interior.Color = RGB(0, 255, 204)
+                        .Font.Color = vbBlack
+                        
+                        ' Paint E to P if no fill exists
+                        If ws.Cells(i, "E").Interior.ColorIndex = xlNone Then
+                            ws.Range(ws.Cells(i, "E"), ws.Cells(i, "P")).Interior.Color = RGB(217, 225, 242)
+                        End If
+                        
+                    ' Logic 3: N-OP
+                    Else
+                        .Value = "N-OP"
+                        .Interior.Color = RGB(255, 100, 230)
+                        .Font.Color = vbBlack
+                    End If
+                 ' Logic 3: N-OP
+                Else
+                    .Value = "N-OP"
+                    .Interior.Color = RGB(255, 100, 230)
+                    .Font.Color = vbBlack
+                End If ' End If Qte_Manif > 0
+                
+                
+            End With
+                
+            
+        End If
+    Next i
+End Sub
