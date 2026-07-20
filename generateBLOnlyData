@@ -1,0 +1,219 @@
+Option Explicit
+
+Sub ProcessBLData()
+    
+    Dim wb As Workbook
+    Dim wsSource As Worksheet
+    Dim wsDest As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim j As Long
+    Dim destRow As Long
+    
+    '===============================
+    ' STEP 0: Setup Workbook & Sheets
+    '===============================
+    
+    Set wb = ActiveWorkbook
+    Set wsSource = wb.ActiveSheet
+    
+    ' Delete Output sheet if it exists
+    Application.DisplayAlerts = False
+    On Error Resume Next
+    wb.Sheets("Output").Delete
+    On Error GoTo 0
+    Application.DisplayAlerts = True
+    
+    ' Create Output sheet
+    Set wsDest = wb.Sheets.Add(After:=wb.Sheets(wb.Sheets.Count))
+    wsDest.Name = "Output"
+    
+    ' Copy header row
+    wsSource.Rows(1).Copy
+    wsDest.Rows(1).PasteSpecial Paste:=xlPasteAllUsingSourceTheme
+    wsDest.Rows(1).PasteSpecial Paste:=xlPasteValues
+    Application.CutCopyMode = False
+    
+    lastRow = wsSource.Cells(wsSource.Rows.Count, "A").End(xlUp).Row
+    
+    If lastRow < 2 Then
+        MsgBox "No data found in source sheet!", vbExclamation
+        Exit Sub
+    End If
+    
+    destRow = 2
+    
+    '===============================
+    ' STEP 1: Collect BL rows only
+    ' Only rows WHERE BL exists
+    ' Sub-rows are completely ignored
+    '===============================
+    
+    Dim blDict As Object
+    Set blDict = CreateObject("Scripting.Dictionary")
+    
+    Dim blOrder() As String
+    Dim blCount As Long
+    blCount = 0
+    
+    For i = 2 To lastRow
+        Dim currentBL As String
+        currentBL = Trim(wsSource.Cells(i, 1).Value)
+        
+        ' Only collect rows that HAVE a BL value
+        If currentBL <> "" Then
+            If Not blDict.exists(currentBL) Then
+                blDict.Add currentBL, i
+                ReDim Preserve blOrder(blCount)
+                blOrder(blCount) = currentBL
+                blCount = blCount + 1
+            End If
+        End If
+        ' Rows with empty BL are completely skipped here
+    Next i
+    
+    If blCount = 0 Then
+        MsgBox "No BL entries found in column A!", vbExclamation
+        Exit Sub
+    End If
+    
+    '===============================
+    ' STEP 2: Process Each BL Row
+    '===============================
+    
+    Dim b As Long
+    For b = 0 To blCount - 1
+        
+        Dim thisBL As String
+        thisBL = blOrder(b)
+        
+        Dim startRow As Long
+        startRow = blDict(thisBL)
+        
+        '-------------------------------------------
+        ' The group is ONLY the BL row itself
+        ' No sub-rows are collected or processed
+        '-------------------------------------------
+        
+        '===============================
+        ' STEP 3: Get nombre colis
+        '         Get chassis from BL row only
+        '===============================
+        
+        Dim nombreColis As Long
+        Dim chassisCount As Long
+        nombreColis = 0
+        chassisCount = 0
+        
+        ' Get nombre colis from BL row (column D = 4)
+        If IsNumeric(wsSource.Cells(startRow, 4).Value) Then
+            nombreColis = CLng(wsSource.Cells(startRow, 4).Value)
+        End If
+        
+        ' Count chassis only on the BL row itself (column I = 9)
+        If Trim(wsSource.Cells(startRow, 9).Value) <> "" Then
+            chassisCount = 1
+        End If
+        
+        '===============================
+        ' STEP 4: Calculate colis_remains
+        '===============================
+        
+        Dim colisRemains As Long
+        colisRemains = nombreColis - chassisCount
+        
+        '===============================
+        ' STEP 5: Apply Rules
+        '===============================
+        
+        Dim chassisVal As String
+        chassisVal = Trim(wsSource.Cells(startRow, 9).Value)
+        
+        '===================================
+        ' CASE 1: No chassis in BL row
+        '         → Copy whole row as is
+        '===================================
+        If chassisVal = "" Then
+        
+            wsSource.Rows(startRow).Copy
+            wsDest.Rows(destRow).PasteSpecial Paste:=xlPasteAllUsingSourceTheme
+            wsDest.Rows(destRow).PasteSpecial Paste:=xlPasteValues
+            Application.CutCopyMode = False
+            
+            wsDest.Cells(destRow, 1).Value = thisBL
+            destRow = destRow + 1
+        
+        '===================================
+        ' CASE 2: Has chassis
+        '===================================
+        ElseIf chassisVal <> "" Then
+        
+            '-----------------------------------
+            ' SUB-CASE A: colis_remains = 0
+            '             → Copy whole row as is
+            '-----------------------------------
+            If colisRemains = 0 Then
+            
+                wsSource.Rows(startRow).Copy
+                wsDest.Rows(destRow).PasteSpecial Paste:=xlPasteAllUsingSourceTheme
+                wsDest.Rows(destRow).PasteSpecial Paste:=xlPasteValues
+                Application.CutCopyMode = False
+                
+                wsDest.Cells(destRow, 1).Value = thisBL
+                destRow = destRow + 1
+            
+            '-----------------------------------
+            ' SUB-CASE B: colis_remains > 0
+            '             → Create 2 copies
+            '-----------------------------------
+            ElseIf colisRemains > 0 Then
+            
+                '-----------------------
+                ' COPY 1:
+                ' Full identical row
+                ' nombre colis = chassis count
+                '-----------------------
+                wsSource.Rows(startRow).Copy
+                wsDest.Rows(destRow).PasteSpecial Paste:=xlPasteAllUsingSourceTheme
+                wsDest.Rows(destRow).PasteSpecial Paste:=xlPasteValues
+                Application.CutCopyMode = False
+                
+                wsDest.Cells(destRow, 1).Value = thisBL
+                wsDest.Cells(destRow, 4).Value = chassisCount   ' nombre colis = chassis count
+                destRow = destRow + 1
+                
+                '-----------------------
+                ' COPY 2:
+                ' Clean row with only:
+                ' BL, colis_remains,
+                ' poids=0, COLIS,
+                ' details, produits
+                '-----------------------
+                wsDest.Rows(destRow).ClearContents
+                
+                wsDest.Cells(destRow, 1).Value = thisBL                                  ' Col A: BL
+                wsDest.Cells(destRow, 4).Value = colisRemains                            ' Col D: nombre colis = colis_remains
+                wsDest.Cells(destRow, 5).Value = 0                                       ' Col E: Poids brute = 0
+                wsDest.Cells(destRow, 7).Value = wsSource.Cells(startRow, 7).Value      ' Col G: Client (kept)
+                wsDest.Cells(destRow, 8).Value = "COLIS"                                 ' Col H: Marchandise2 = COLIS
+                wsDest.Cells(destRow, 11).Value = wsSource.Cells(startRow, 11).Value    ' Col K: Details (kept)
+                wsDest.Cells(destRow, 12).Value = wsSource.Cells(startRow, 12).Value    ' Col L: Produits (kept)
+                
+                destRow = destRow + 1
+                
+            End If
+            
+        End If
+        
+    Next b
+    
+    '===============================
+    ' STEP 6: Final formatting
+    '===============================
+    
+    wsDest.Columns.AutoFit
+    
+    MsgBox "Done! Output written to 'Output' sheet." & vbNewLine & _
+           "Total BL groups processed: " & blCount, vbInformation, "Process Complete"
+    
+End Sub
