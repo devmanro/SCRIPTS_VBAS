@@ -7,7 +7,6 @@ Sub ProcessBLData()
     Dim wsDest As Worksheet
     Dim lastRow As Long
     Dim i As Long
-    Dim j As Long
     Dim destRow As Long
     
     '===============================
@@ -45,8 +44,6 @@ Sub ProcessBLData()
     
     '===============================
     ' STEP 1: Collect BL rows only
-    ' Only rows WHERE BL exists
-    ' Sub-rows are completely ignored
     '===============================
     
     Dim blDict As Object
@@ -60,7 +57,6 @@ Sub ProcessBLData()
         Dim currentBL As String
         currentBL = Trim(wsSource.Cells(i, 1).Value)
         
-        ' Only collect rows that HAVE a BL value
         If currentBL <> "" Then
             If Not blDict.exists(currentBL) Then
                 blDict.Add currentBL, i
@@ -69,7 +65,6 @@ Sub ProcessBLData()
                 blCount = blCount + 1
             End If
         End If
-        ' Rows with empty BL are completely skipped here
     Next i
     
     If blCount = 0 Then
@@ -90,14 +85,11 @@ Sub ProcessBLData()
         Dim startRow As Long
         startRow = blDict(thisBL)
         
-        '-------------------------------------------
-        ' The group is ONLY the BL row itself
-        ' No sub-rows are collected or processed
-        '-------------------------------------------
-        
         '===============================
         ' STEP 3: Get nombre colis
-        '         Get chassis from BL row only
+        '         Count chassis across BL row
+        '         AND its sub-rows (for counting
+        '         purposes only, not for copying)
         '===============================
         
         Dim nombreColis As Long
@@ -110,10 +102,26 @@ Sub ProcessBLData()
             nombreColis = CLng(wsSource.Cells(startRow, 4).Value)
         End If
         
-        ' Count chassis only on the BL row itself (column I = 9)
-        If Trim(wsSource.Cells(startRow, 9).Value) <> "" Then
-            chassisCount = 1
+        ' Count chassis on BL row itself first
+        If Trim(wsSource.Cells(startRow, 8).Value) <> "" Then
+            chassisCount = chassisCount + 1
         End If
+        
+        ' Count chassis on sub-rows (empty BL rows below)
+        ' ONLY FOR COUNTING - not for copying
+        Dim scanRow As Long
+        scanRow = startRow + 1
+        Do While scanRow <= lastRow
+            ' Stop when we hit the next BL row
+            If Trim(wsSource.Cells(scanRow, 1).Value) <> "" Then
+                Exit Do
+            End If
+            ' Count chassis if exists on sub-row
+            If Trim(wsSource.Cells(scanRow, 9).Value) <> "" Then
+                chassisCount = chassisCount + 1
+            End If
+            scanRow = scanRow + 1
+        Loop
         
         '===============================
         ' STEP 4: Calculate colis_remains
@@ -124,14 +132,16 @@ Sub ProcessBLData()
         
         '===============================
         ' STEP 5: Apply Rules
+        ' Only process the BL row itself
+        ' Sub-rows are NEVER copied
         '===============================
         
         Dim chassisVal As String
-        chassisVal = Trim(wsSource.Cells(startRow, 9).Value)
+        chassisVal = Trim(wsSource.Cells(startRow, 8).Value)
         
         '===================================
         ' CASE 1: No chassis in BL row
-        '         → Copy whole row as is
+        '         ? Copy whole row as is
         '===================================
         If chassisVal = "" Then
         
@@ -150,7 +160,7 @@ Sub ProcessBLData()
         
             '-----------------------------------
             ' SUB-CASE A: colis_remains = 0
-            '             → Copy whole row as is
+            '             ? Copy whole row as is
             '-----------------------------------
             If colisRemains = 0 Then
             
@@ -164,7 +174,7 @@ Sub ProcessBLData()
             
             '-----------------------------------
             ' SUB-CASE B: colis_remains > 0
-            '             → Create 2 copies
+            '             ? Create 2 copies
             '-----------------------------------
             ElseIf colisRemains > 0 Then
             
@@ -179,7 +189,7 @@ Sub ProcessBLData()
                 Application.CutCopyMode = False
                 
                 wsDest.Cells(destRow, 1).Value = thisBL
-                wsDest.Cells(destRow, 4).Value = chassisCount   ' nombre colis = chassis count
+                wsDest.Cells(destRow, 4).Value = chassisCount    ' nombre colis = chassis count
                 destRow = destRow + 1
                 
                 '-----------------------
@@ -192,7 +202,7 @@ Sub ProcessBLData()
                 wsDest.Rows(destRow).ClearContents
                 
                 wsDest.Cells(destRow, 1).Value = thisBL                                  ' Col A: BL
-                wsDest.Cells(destRow, 4).Value = colisRemains                            ' Col D: nombre colis = colis_remains
+                wsDest.Cells(destRow, 4).Value = colisRemains                             ' Col D: nombre colis = colis_remains
                 wsDest.Cells(destRow, 5).Value = 0                                       ' Col E: Poids brute = 0
                 wsDest.Cells(destRow, 7).Value = wsSource.Cells(startRow, 7).Value      ' Col G: Client (kept)
                 wsDest.Cells(destRow, 8).Value = "COLIS"                                 ' Col H: Marchandise2 = COLIS
@@ -217,3 +227,4 @@ Sub ProcessBLData()
            "Total BL groups processed: " & blCount, vbInformation, "Process Complete"
     
 End Sub
+
