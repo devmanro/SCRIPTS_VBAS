@@ -1,0 +1,455 @@
+
+' CALCULER LA SURFACE
+
+Option Explicit
+
+'=====================================
+' REFERENCE DATA FUNCTION
+'=====================================
+Function GetRefData() As Variant
+    Dim entries(0 To 79) As Variant
+    
+    ' PRODUITS, DETAILS    > ORDER
+    ' ========= VEHICULES =========
+    entries(0) = Array("VEHICULES", "VHL LEGER", 8#)
+    entries(1) = Array("VEHICULES", "CAMIONETTE H100/K2700/DFSK", 12#)
+    entries(2) = Array("VEHICULES", "CAMION JMC/JAC/YUEGIN/HINO", 18#)
+    entries(3) = Array("VEHICULES", "FOURGON", 18#)
+    entries(4) = Array("VEHICULES", "50PLACES", 40#)
+    entries(5) = Array("VEHICULES", "35PLACES", 24#)
+    entries(6) = Array("VEHICULES", "25PLACES", 18#)
+    entries(7) = Array("VEHICULES", "CAMIONS DIVERS", 24#)
+    entries(8) = Array("VEHICULES", "CAMION TRACTEUR", 18#)
+    entries(9) = Array("VEHICULES", "CAMION POMPE", 36#)
+    
+    ' ========= REMORQUES =========
+    entries(10) = Array("REMORQUES", "REMORQUE", 24#)
+    entries(11) = Array("REMORQUES", "REMORQUE PORTE CHAR", 36#)
+    entries(12) = Array("REMORQUES", "REMORQUE PORTE VHL", 40#)
+    
+    ' ========= ENGINS =========
+    entries(13) = Array("ENGINS", "CHARGEUR", 24#)
+    entries(14) = Array("ENGINS", "EXCAVATEUR", 24#)
+    entries(15) = Array("ENGINS", "BULLDOZER", 24#)
+    entries(16) = Array("ENGINS", "FINISHEUR", 24#)
+    entries(17) = Array("ENGINS", "RETRO CHARGEUR", 18#)
+    entries(18) = Array("ENGINS", "COMPACTEUR", 18#)
+    entries(19) = Array("ENGINS", "CHARIOT ELEVATEUR 15T ET PLUS", 18#)
+    entries(20) = Array("ENGINS", "TRACTEUR AGRICOLE", 18#)
+    entries(21) = Array("ENGINS", "CHARIOT ELEVATEUR MOINS DE 15T", 12#)
+    entries(22) = Array("ENGINS", "NIVELLEUSE", 40#)
+    entries(23) = Array("ENGINS", "CAMION GRUE GRAND TONNAGE", 60#)
+    entries(24) = Array("ENGINS", "CAMION GRUE PETIT TONNAGE", 36#)
+    entries(25) = Array("ENGINS", "PELLE CHARGEUR", 4#)
+    entries(26) = Array("ENGINS", "CONTRE POIDS GRUE MOBILE", 3#)
+    entries(27) = Array("ENGINS", "CHOULEUR", 5#)
+    entries(29) = Array("ENGINS", "CHARGEURS", 24#)
+    entries(30) = Array("ENGINS", "COMPACTEURS", 24#)
+    entries(31) = Array("ENGINS", "CHARIOT ELEVATEUR", 24#)
+    entries(32) = Array("ENGINS", "RETROCHARGEURS", 24#)
+    entries(33) = Array("ENGINS", "CAMION GRUE", 60#)
+    entries(34) = Array("ENGINS", "FINISHERS", 40#)
+    
+    ' ========= COLIS =========
+    entries(35) = Array("COLIS", "COLIS", 2#)
+    entries(36) = Array("COLIS", "BIG", 10)
+    entries(36) = Array("BIG BAG", "BIG BAG", 1.7)
+    
+    ' ========= CORNIERES =========
+    entries(37) = Array("CORNIERES", "CORNIERE 12M", 1.19)
+    entries(38) = Array("CORNIERES", "CORNIERE 6M", 0.8)
+    entries(39) = Array("CORNIERES", "CORNIERES", 0.57)
+    
+    ' ========= TUBES =========
+    entries(40) = Array("TUBES", "FDX TUBES 2-4 POUCES", 6#)
+    entries(41) = Array("TUBES", "TUBES 9 POUCES", 3.6)
+    entries(42) = Array("TUBES", "TUBES 13 POUCES", 4.8)
+    entries(43) = Array("TUBES", "TUBES ENROBE 8 POUCES", 3#)
+    entries(44) = Array("TUBES", "FDX TUBES ENROBE 6 POUCES", 2.4)
+    entries(45) = Array("TUBES", "FDX TUBES ENROBE 10 POUCES", 3.6)
+    entries(46) = Array("TUBES", "TUBES ENROBE 20 POUCES", 6#)
+    entries(47) = Array("TUBES", "TUBES 24 POUCES", 7.2)
+    entries(48) = Array("TUBES", "FDX TUBES 8 POUCES", 8.4)
+    entries(49) = Array("TUBES", "TUBES", 0.71)
+    
+    ' ========= BOBINES =========
+    entries(50) = Array("BOBINES", "BOBINES LAC 10T-12T", 2#)
+    entries(51) = Array("BOBINES", "BOBINES PPG 5T-7T", 1.2)
+    entries(52) = Array("BOBINES", "BOBINES PPG 8T-9T", 1.35)
+    entries(53) = Array("BOBINES", "BOBINES LAC 20T-30T", 3.25)
+    entries(54) = Array("BOBINES", "BOBINES LAC 13T-15T", 2.2)
+    entries(55) = Array("BOBINES", "BOBINES LAC 16T-19T", 2.2)
+    entries(56) = Array("BOBINES", "BOBINES", 0.63)
+    
+    ' ========= CTP / MDF =========
+    entries(57) = Array("CTP", "CTP 1.22x2.44 T/P", 2.9)
+    entries(57) = Array("CTP", "CTP", 0.72)
+    entries(58) = Array("CTP", "MDF 0.85x2.00 HG", 1.9)
+    entries(59) = Array("CTP", "MDF 1.22x2.44 HG", 2.9)
+    entries(60) = Array("CTP", "MDF GF T/P", 2.9)
+    entries(61) = Array("CTP", "MDF GF HG", 2.9)
+    entries(62) = Array("CTP", "MDF 3.66x1.80", 6.6)
+    entries(63) = Array("CTP", "MDF", 0.71)
+    entries(64) = Array("CTP", "FFP", 0.71)
+    entries(65) = Array("CTP", "CTP+MDF", 0.71)
+    entries(66) = Array("CTP", "CTP+FFP", 0.71)
+    entries(66) = Array("CTP", "MDF+PLYWOOD", 0.71)
+    
+    ' ========= POUTRELLES =========
+    entries(67) = Array("POUTRELLES", "POUTRELLE FORTE EPAISSEUR", 9.6)
+    entries(68) = Array("POUTRELLES", "POUTRELLE MINCE EPAISSEUR", 7.2)
+    entries(69) = Array("POUTRELLES", "POUTRELLES", 1.2)
+    
+    ' ========= TOLES =========
+    entries(70) = Array("TOLES EN PLAQUES", "TOLE", 0.25)
+    entries(72) = Array("TOLES EN PLAQUES", "TOLE 3M", 0.2)
+    entries(70) = Array("TOLES EN PLAQUES", "TOLE 6M", 0.3)
+    entries(71) = Array("TOLES EN PLAQUES", "TOLE 12M", 0.6)
+    entries(73) = Array("TOLES EN PLAQUES", "TOLES EN PLAQUES", 5#)
+    
+    ' ========= CONTENEURS =========
+    entries(74) = Array("CONTENEURS", "40PIEDS", 30#)
+    entries(75) = Array("CONTENEURS", "20PIEDS", 15#)
+    
+    ' ========= FILS =========
+    entries(76) = Array("FILS", "FIL MACHINE", 2.25)
+    
+    ' ========= LOURD =========
+    entries(77) = Array("CAMIONS", "LOURD", 24#)
+    entries(78) = Array("REMORQUES", "LOURD", 24#)
+    
+    ' ========= COLIS SUPPLEMENTAIRES =========
+    entries(79) = Array("COLIS", "COLIS", 5#)
+    
+    GetRefData = entries
+End Function
+
+'=====================================
+' MAIN SUB
+'=====================================
+Sub CalculateSurf()
+
+    '=====================================
+    ' VARIABLES
+    '=====================================
+    Dim ws          As Worksheet
+    Dim wsRef       As Worksheet
+    Dim lastRow     As Long
+    Dim r           As Long
+    
+    ' Column indexes
+    Dim colNbColis  As Long
+    Dim colProduits As Long
+    Dim colDetails  As Long
+    Dim colSurf     As Long
+    
+    ' Header search
+    Dim headerRow   As Long
+    Dim cell        As Range
+    Dim headerRange As Range
+    
+    '=====================================
+    ' WORK ON ACTIVE SHEET
+    '=====================================
+    Set ws = ActiveSheet
+    headerRow = 1
+    
+    '=====================================
+    ' FIND COLUMNS BY HEADER NAME (Row 1)
+    '=====================================
+    Set headerRange = ws.Rows(headerRow)
+    
+    colNbColis = 0
+    colProduits = 0
+    colDetails = 0
+    colSurf = 0
+    
+    For Each cell In headerRange.Cells
+        If cell.Value = "" Then
+            If cell.Column > 20 Then Exit For
+        End If
+        
+        Select Case Trim(LCase(cell.Value))
+            Case "nb colis", "nbcolis", "nb_colis", "nombre colis", "colis", "qte"
+                colNbColis = cell.Column
+            Case "produits", "produit", "product", "type"
+                colProduits = cell.Column
+            Case "Détails PRODUITS", "détails", "details", "detail", "détail"
+                colDetails = cell.Column
+            Case "surf", "surface", "surf (m2)", "surface (m2)"
+                colSurf = cell.Column
+        End Select
+    Next cell
+    
+    '=====================================
+    ' VALIDATE COLUMNS FOUND
+    '=====================================
+    Dim missingCols As String
+    missingCols = ""
+    
+    If colNbColis = 0 Then missingCols = missingCols & "- Nb Colis" & vbNewLine
+    If colProduits = 0 Then missingCols = missingCols & "- Produits" & vbNewLine
+    If colDetails = 0 Then missingCols = missingCols & "- Details" & vbNewLine
+    If colSurf = 0 Then missingCols = missingCols & "- Surf" & vbNewLine
+    
+    If missingCols <> "" Then
+        MsgBox "Could not find these columns in Row 1:" & vbNewLine & vbNewLine & _
+               missingCols & vbNewLine & _
+               "Please make sure your headers match:" & vbNewLine & _
+               "- Nb Colis" & vbNewLine & _
+               "- Produits" & vbNewLine & _
+               "- Details" & vbNewLine & _
+               "- Surf", _
+               vbCritical, "Missing Columns"
+        Exit Sub
+    End If
+    
+    '=====================================
+    ' BUILD OR UPDATE REFERENCE SHEET
+    '=====================================
+    Set wsRef = Nothing
+    
+    On Error Resume Next
+    Set wsRef = ThisWorkbook.Sheets("_RefCoeff")
+    On Error GoTo 0
+    
+    If wsRef Is Nothing Then
+        Set wsRef = ThisWorkbook.Sheets.Add
+        wsRef.Name = "_RefCoeff"
+        wsRef.Visible = xlSheetVeryHidden
+    End If
+    
+    ' Clear and rebuild reference data
+    wsRef.Cells.Clear
+    wsRef.Range("A1").Value = "Produits"
+    wsRef.Range("B1").Value = "Details"
+    wsRef.Range("C1").Value = "Coefficient"
+    
+
+    
+    ' Load reference data from function
+    Dim refData As Variant
+    refData = GetRefData()
+    
+    Dim i As Integer
+    For i = 0 To UBound(refData)
+        wsRef.Cells(i + 2, 1).Value = refData(i)(1) ' Column A (Produits) now gets refData(i)(1) -> "REMORQUE"
+        wsRef.Cells(i + 2, 2).Value = refData(i)(0) ' Column B (Details) now gets refData(i)(0)  -> "REMORQUES"
+        wsRef.Cells(i + 2, 3).Value = refData(i)(2) ' Column C (Coefficient) stays refData(i)(2) -> 24
+        
+        'wsRef.Cells(i + 2, 1).Value = CStr(refData(i)(1))
+        'wsRef.Cells(i + 2, 2).Value = CStr(refData(i)(0))
+        'wsRef.Cells(i + 2, 3).Value = CDbl(refData(i)(2))
+        
+    Next i
+    
+    '=====================================
+    ' FIND LAST ROW IN ACTIVE SHEET
+    '=====================================
+    lastRow = ws.Cells(ws.Rows.Count, colNbColis).End(xlUp).Row
+    
+    If lastRow <= headerRow Then
+        MsgBox "No data found below the header row.", _
+               vbExclamation, "No Data"
+        Exit Sub
+    End If
+    
+    '=====================================
+    ' CALCULATE SURF FOR EACH ROW
+    '=====================================
+    Dim nbColis      As Double
+    Dim produit      As String
+    Dim detail       As String
+    Dim coeff        As Double
+    Dim surfVal      As Variant
+    Dim found        As Boolean
+    Dim refLastRow   As Long
+    Dim j            As Long
+    Dim calcCount    As Long
+    Dim skipCount    As Long
+    Dim noMatchCount As Long
+    
+    refLastRow = wsRef.Cells(wsRef.Rows.Count, 1).End(xlUp).Row
+    calcCount = 0
+    skipCount = 0
+    noMatchCount = 0
+    
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    
+    For r = headerRow + 1 To lastRow
+    
+        nbColis = 0
+        produit = ""
+        detail = ""
+        
+        ' Nb Colis must be numeric
+        If IsNumeric(ws.Cells(r, colNbColis).Value) Then
+            nbColis = CDbl(ws.Cells(r, colNbColis).Value)
+        Else
+            skipCount = skipCount + 1
+            GoTo nextRow
+        End If
+        
+        ' Produits & Details must not be empty
+        produit = Trim(UCase(ws.Cells(r, colProduits).Value))
+        detail = Trim(UCase(ws.Cells(r, colDetails).Value))
+        
+        If produit = "" Or detail = "" Then
+            skipCount = skipCount + 1
+            GoTo nextRow
+        End If
+        
+        '=====================================
+        ' LOOKUP COEFFICIENT
+        '=====================================
+        coeff = 0
+        found = False
+        
+        Dim refProd As String
+        Dim refDet  As String
+        
+        For j = 2 To refLastRow
+            refProd = Trim(UCase(wsRef.Cells(j, 1).Value))
+            refDet = Trim(UCase(wsRef.Cells(j, 2).Value))
+            
+            If refProd = produit And refDet = detail Then
+                coeff = CDbl(wsRef.Cells(j, 3).Value)
+                found = True
+                Exit For
+            End If
+        Next j
+        
+        '=====================================
+        ' WRITE SURF VALUE
+        '=====================================
+        If found Then
+            surfVal = nbColis * coeff
+            With ws.Cells(r, colSurf)
+                .Value = surfVal
+                .NumberFormat = "#,##0.00"
+                .Interior.Color = RGB(198, 239, 206)
+                .Font.Color = RGB(0, 97, 0)
+                .Font.Bold = False
+            End With
+            calcCount = calcCount + 1
+        Else
+            With ws.Cells(r, colSurf)
+                .Value = "N/A"
+                .Interior.Color = RGB(255, 235, 156)
+                .Font.Color = RGB(156, 101, 0)
+                .Font.Bold = True
+            End With
+            noMatchCount = noMatchCount + 1
+        End If
+        
+nextRow:
+    Next r
+    
+    '=====================================
+    ' RESTORE EXCEL SETTINGS
+    '=====================================
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+    
+    '=====================================
+    ' DONE MESSAGE
+    '=====================================
+    MsgBox "Surf Calculation Complete!" & vbNewLine & vbNewLine & _
+           "Sheet      : " & ws.Name & vbNewLine & _
+           "Rows found : " & (lastRow - headerRow) & vbNewLine & _
+           "Calculated : " & calcCount & vbNewLine & _
+           "No match   : " & noMatchCount & vbNewLine & _
+           "Skipped    : " & skipCount & vbNewLine & vbNewLine & _
+           "Columns used:" & vbNewLine & _
+           "- Nb Colis  > Col " & colNbColis & vbNewLine & _
+           "- Produits  > Col " & colProduits & vbNewLine & _
+           "- Details   > Col " & colDetails & vbNewLine & _
+           "- Surf      > Col " & colSurf, _
+           vbInformation, "Surf Calculator"
+
+End Sub
+
+'=====================================
+' ADD BUTTON TO SHEET
+'=====================================
+Sub AddSurfButton()
+
+    Dim ws  As Worksheet
+    Dim shp As Shape
+    Dim btn As Shape
+    
+    Set ws = ActiveSheet
+    
+    ' Remove existing button if any
+    For Each shp In ws.Shapes
+        If shp.Name = "BtnCalculSurf" Then shp.Delete
+    Next shp
+    
+    ' Add new button
+    Set btn = ws.Shapes.AddFormControl( _
+        xlButtonControl, _
+        ws.Cells(1, 1).Left, _
+        ws.Cells(1, 1).Top, _
+        160, 28)
+    
+    With btn
+        .Name = "BtnCalculSurf"
+        .TextFrame.Characters.Text = "Calculate Surf"
+        .TextFrame.Characters.Font.Bold = True
+        .TextFrame.Characters.Font.Size = 11
+        .OnAction = "CalculateSurf"
+    End With
+    
+    MsgBox "Button added to sheet: " & ws.Name, _
+           vbInformation, "Button Added"
+
+End Sub
+
+'=====================================
+' CLEAR SURF COLUMN
+'=====================================
+Sub ClearSurf()
+
+    Dim ws          As Worksheet
+    Dim cell        As Range
+    Dim headerRange As Range
+    Dim colSurf     As Long
+    Dim lastRow     As Long
+    
+    Set ws = ActiveSheet
+    Set headerRange = ws.Rows(1)
+    colSurf = 0
+    
+    For Each cell In headerRange.Cells
+        If cell.Value = "" And cell.Column > 20 Then Exit For
+        Select Case Trim(LCase(cell.Value))
+            Case "surf", "surface", "surf (m2)", "surface (m2)"
+                colSurf = cell.Column
+        End Select
+    Next cell
+    
+    If colSurf = 0 Then
+        MsgBox "Could not find 'Surf' column.", _
+               vbCritical, "Column Not Found"
+        Exit Sub
+    End If
+    
+    lastRow = ws.Cells(ws.Rows.Count, colSurf).End(xlUp).Row
+    
+    If lastRow <= 1 Then
+        MsgBox "No data to clear.", vbExclamation, "Empty"
+        Exit Sub
+    End If
+    
+    With ws.Range(ws.Cells(2, colSurf), ws.Cells(lastRow, colSurf))
+        .ClearContents
+        .Interior.ColorIndex = xlNone
+        .Font.ColorIndex = xlAutomatic
+        .Font.Bold = False
+    End With
+    
+    MsgBox "Surf column cleared successfully!", _
+           vbInformation, "Cleared"
+
+End Sub
