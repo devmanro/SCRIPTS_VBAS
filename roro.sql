@@ -1,0 +1,42 @@
+-- @export name "RORO"
+SELECT
+    RTRIM(n.NAVNOM)                       AS NAVIRE_NOM,
+    RTRIM(n.NAVNUM)                       AS NAVIRE_CODE,
+    RTRIM(c.CNSBLD)                       AS BL_NO,
+    RTRIM(c.CNSNNM)                       AS DESTINATAIRE,
+    NVL(enl.VEH_ENLEVE, 0)               AS VEH_ENLEVE,
+    TO_CHAR(f.FACDAT, 'DD/MM/YYYY')       AS DATE_FACTURE,
+    RTRIM(trs.TRSNOM)                     AS TRANSITAIRE,
+    RTRIM(cli.CLINOM)                     AS CLIENT
+FROM RORO.FACTURE f
+JOIN RORO.TAXATION t
+    ON t.TAXNUM        = f.TAXNUM
+JOIN RORO.CONNAISSEMENT c
+    ON c.CNSNUM        = t.CNSNUM
+JOIN RORO.MANIFESTE m
+    ON m.MANNUM        = c.MANNUM
+JOIN RORO.ESCALE es
+    ON es.ESCNUM       = m.ESCNUM
+JOIN RORO.NAVIRE n
+    ON RTRIM(n.NAVNUM) = RTRIM(es.NAVNUM)
+LEFT JOIN RORO.TRANSITAIRE trs
+    ON RTRIM(trs.TRSCOD) = RTRIM(f.TRSCOD)
+LEFT JOIN RORO.CLIENT cli
+    ON RTRIM(cli.CLICOD) = RTRIM(f.CLICOD)
+JOIN (
+    SELECT
+        CNSNUM,
+        SUM(NVL(ENLNVU, 0))
+            + SUM(NVL(ENLNVT, 0))  AS VEH_ENLEVE,
+        MAX(ENLDAT)                 AS DERNIERE_DATE_ENL
+    FROM RORO.ENLEVEMENT
+    WHERE ENLDAT IS NOT NULL
+    GROUP BY CNSNUM
+    HAVING SUM(NVL(ENLNVU, 0))
+         + SUM(NVL(ENLNVT, 0)) > 0
+) enl
+    ON enl.CNSNUM = c.CNSNUM
+ORDER BY
+    enl.DERNIERE_DATE_ENL DESC,
+    RTRIM(n.NAVNOM),
+    RTRIM(c.CNSBLD);
