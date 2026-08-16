@@ -1,0 +1,64 @@
+-- @export name "DIVER"
+SELECT
+    RTRIM(n.NAVNOM)                        AS NAVIRE_NOM,
+    es.ESCNUM                              AS ESCALE_NUM,
+    RTRIM(m.MANNUM)                        AS MANIFESTE_NO,
+    RTRIM(c.CNSBLD)                        AS BL_NO,
+    RTRIM(c.CNSNNM)                        AS DESTINATAIRE,
+    NVL(c.CNSNBC,  0)                      AS COLIS_MANIFESTE,
+    NVL(deb.COLIS_DEBARQUE, 0)             AS COLIS_DEBARQUE,
+    NVL(enl.COLIS_ENLEVE, 0)               AS COLIS_ENLEVE,
+    NVL(deb.COLIS_DEBARQUE, 0)
+        - NVL(enl.COLIS_ENLEVE, 0)         AS RESTE_EN_STOCK,
+    TO_CHAR(enl.DERNIERE_DATE_ENL,
+            'DD/MM/YYYY')                  AS DERNIERE_DATE_ENLEVEMENT,
+    TO_CHAR(f.FACDAT, 'DD/MM/YYYY')        AS DATE_FACTURE
+FROM (
+    -- ONE ROW PER BL: latest facture only (NO DATE FILTER)
+    SELECT DISTINCT
+        t.CNSNUM,
+        FIRST_VALUE(f2.FACNUM) OVER (
+            PARTITION BY t.CNSNUM
+            ORDER BY f2.FACDAT DESC, f2.FACNUM DESC
+        ) AS FACNUM,
+        FIRST_VALUE(f2.FACDAT) OVER (
+            PARTITION BY t.CNSNUM
+            ORDER BY f2.FACDAT DESC, f2.FACNUM DESC
+        ) AS FACDAT
+    FROM ACONAGE.FACTURE f2
+    JOIN ACONAGE.TAXATION t
+        ON t.TAXNUM = f2.TAXNUM
+) f
+JOIN ACONAGE.CONNAISSEMENT c
+    ON c.CNSNUM = f.CNSNUM
+JOIN ACONAGE.MANIFESTE m
+    ON m.MANNUM = c.MANNUM
+JOIN ACONAGE.ESCALE es
+    ON es.ESCNUM = m.ESCNUM
+JOIN ACONAGE.NAVIRE n
+    ON RTRIM(n.NAVNUM) = RTRIM(es.NAVNUM)
+LEFT JOIN (
+    -- TOTAL DEBARQUE PER BL
+    SELECT
+        CNSNUM,
+        SUM(NVL(DEBCOL, 0)) AS COLIS_DEBARQUE
+    FROM ACONAGE.DEBARQUER
+    GROUP BY CNSNUM
+) deb
+    ON deb.CNSNUM = c.CNSNUM
+LEFT JOIN (
+    -- TOTAL ENLEVE PER BL
+    SELECT
+        CNSNUM,
+        SUM(NVL(ENLCOL, 0)) AS COLIS_ENLEVE,
+        MAX(ENLDAT)         AS DERNIERE_DATE_ENL
+    FROM ACONAGE.ENLEVEMENT
+    GROUP BY CNSNUM
+) enl
+    ON enl.CNSNUM = c.CNSNUM
+WHERE
+    NVL(enl.COLIS_ENLEVE, 0) > 0
+ORDER BY
+    f.FACDAT DESC,
+    RTRIM(n.NAVNOM),
+    RTRIM(c.CNSBLD);
