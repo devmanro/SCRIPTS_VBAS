@@ -1,0 +1,40 @@
+SELECT
+    RTRIM(c.CNSBLD)                        AS BL,
+    RTRIM(c.CNSART)                        AS ARTICLE,
+    RTRIM(nat.NAMLIB)                      AS MARCHANDISE,
+    NVL(c.CNSNBC, 0)                       AS NOMBRE_COLIS,
+    NVL(c.CNSPOI, 0)                       AS POIDS_BRUT,
+    RTRIM(c.CNSNNM)                        AS CLIENT,
+    RTRIM(cnd.CNDLIB)                      AS MARCHANDISE2,
+    NULL                                   AS NUMERO_CHASSIS,
+    NULL                                   AS MODELE,
+    NULL                                   AS DETAILS_PRODUITS,
+    NULL                                   AS PRODUITS,
+    NULL                                   AS SURF,
+    es.ESCNUM                              AS ESCALE_NUMB,
+    RTRIM(n.NAVNOM)                        AS NAVIRE_NAME,
+    RTRIM(m.MANNUM)                        AS MRN,
+    TO_CHAR(es.ESCDAT, 'DD/MM/YYYY')       AS DATE_ENTREE,
+    RTRIM(con.CONNOM)                      AS CONSIGNATAIRE
+FROM ACONAGE.CONNAISSEMENT c
+JOIN ACONAGE.MANIFESTE m
+    ON m.MANNUM        = c.MANNUM
+JOIN ACONAGE.ESCALE es
+    ON es.ESCNUM       = m.ESCNUM
+JOIN ACONAGE.NAVIRE n
+    ON RTRIM(n.NAVNUM) = RTRIM(es.NAVNUM)
+LEFT JOIN ACONAGE.NATURE nat
+    ON RTRIM(nat.NAMCOD) = RTRIM(c.NAMCOD)
+LEFT JOIN ACONAGE.CONDITION cnd
+    ON RTRIM(cnd.CNDCOD) = RTRIM(c.CNDCOD)
+LEFT JOIN ACONAGE.CONSIGNATAIRE con
+    ON RTRIM(con.CONCOD) = RTRIM(es.CONCOD)
+WHERE es.ESCNUM =20260250
+    -- FILTER BY ESCALE OR NAVIRE OR MANIFESTE
+    -- EXAMPLE: es.ESCNUM = :p_escnum
+    -- OR: RTRIM(m.MANNUM) = :p_mannum
+    -- OR: RTRIM(n.NAVNOM) LIKE '%' || :p_navnom || '%'
+    
+ORDER BY
+    RTRIM(m.MANNUM),
+    RTRIM(c.CNSBLD);
